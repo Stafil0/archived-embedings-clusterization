@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 
 namespace MTA.Pdf2Text
 {
@@ -10,8 +12,9 @@ namespace MTA.Pdf2Text
     [STAThread]
     static void Main(string[] args)
     {
-      var path = @"D:\For work\Projects\MTA\Book.pdf";
-      var output = Converter.ParsePdf(path);
+      var bookPath = @"D:\For work\Projects\MTA\Book.pdf";
+      var txtPath = $@"{Path.GetDirectoryName(bookPath)}\{Path.GetFileNameWithoutExtension(bookPath)}.txt";
+      Converter.ToSetntencesFile(bookPath, txtPath);
     }
   }
 }
