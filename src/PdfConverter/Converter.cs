@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -9,11 +9,11 @@ namespace MTA.PdfConverter
 {
   public static class Converter
   {
-    private static readonly string[] Inlines = { "Î‡Ú", "„Â˜", "‰", "‡Ì„Î", "ÒÏ", "ÌÏ", "Ú˚Ò", "‡Ú" };
-    private static readonly char[] TrimSymbols = { ',', '.', ' ', '?', '!', '-', 'ó' };
-    private static readonly string MatchesRegex = $@"((?:(?(?=(\b{string.Join(@"\.|\b", Inlines)}\.|[^‡-ˇ¿-ﬂa-zA-Z][‡-ˇ¿-ﬂa-zA-Z]\.\s?|\d+\.\d))\2|[^.!?])+[.!?]))";
-    private const string PunctuationRegex = @"[^‡-ˇ¿-ﬂa-zA-Z]{2,}";
-    private const string ShortWordsRegex = @"\b[‡-ˇ¿-ﬂa-zA-Z]{1,2}\b";
+    private static readonly string[] Inlines = { "–ª–∞—Ç", "–≥—Ä–µ—á", "–¥—Ä", "–∞–Ω–≥–ª", "—Å–º", "–Ω–º", "—Ç—ã—Å", "–∞—Ç" };
+    private static readonly char[] TrimSymbols = { ',', '.', ' ', '?', '!', '-', '‚Äî', 'Ôºø' };
+    private static readonly string MatchesRegex = $@"((?:(?(?=(\b{string.Join(@"\.|\b", Inlines)}\.|[^–∞-—è–ê-–Øa-zA-Z][–∞-—è–ê-–Øa-zA-Z]\.\s?|\d+\.\d))\2|[^.!?])+[.!?]))";
+    private const string PunctuationRegex = @"[^–∞-—è–ê-–Øa-zA-Z]{2,}";
+    private const string ShortWordsRegex = @"\b[–∞-—è–ê-–Øa-zA-Z]{1,2}\b";
 
     public static string GetTextFromFile(string path)
     {

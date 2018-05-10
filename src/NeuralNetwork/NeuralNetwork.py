@@ -15,7 +15,7 @@ MODEL_PATH = os.path.join(CURRENT_DIR, MODEL_FILE)
 # Model params
 MODEL_SIZE = 100
 MODEL_WINDOW = 5
-MODEL_MIN_COUNT = 2
+MODEL_MIN_COUNT = 4
 MODEL_WORKERS = 8
 MODEL_EPOCHS = 1000
 MODEL_SKIPGRAM = 1
@@ -26,7 +26,7 @@ TRAINING_UPDATE = False
 def load_sentences():
   print('Loading sentences')
   if (os.path.isfile(SENTENCES_PATH)):
-    sentences = gensim.models.word2vec.LineSentence(SENTENCES_FILE)
+    sentences = gensim.models.word2vec.LineSentence(SENTENCES_PATH)
     return sentences
   else:
     print('No sentence file!')
@@ -78,4 +78,4 @@ if __name__ == '__main__':
     sys.exit(1)
 
   model = train_model(model, sentences)
-  test_model(model, 'гистология')
+  test_model(model, 'аспирин')
