@@ -8,12 +8,13 @@ import sys
 MODEL_FILE = 'model.bin'
 SENTENCES_FILE = 'sentences.txt'
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-SENTENCES_PATH = os.path.join(CURRENT_DIR, SENTENCES_FILE)
+SAMPLES_DIR = os.path.abspath(os.path.join(os.path.join(__file__, '../../..'), 'samples'))
+SENTENCES_PATH = os.path.join(SAMPLES_DIR, SENTENCES_FILE)
 MODEL_PATH = os.path.join(CURRENT_DIR, MODEL_FILE)
 
 # Model params
 MODEL_SIZE = 100
-MODEL_WINDOW = 7
+MODEL_WINDOW = 5
 MODEL_MIN_COUNT = 2
 MODEL_WORKERS = 8
 MODEL_EPOCHS = 1000
@@ -52,9 +53,8 @@ def load_model():
 def train_model(model, sentences):
   print('Start training model')
 
-  bigram = gensim.models.Phrases(sentences)
-  model.build_vocab(bigram[sentences], update=TRAINING_UPDATE)
-  model.train(bigram[sentences], 
+  model.build_vocab(sentences, update=TRAINING_UPDATE)
+  model.train(sentences, 
               total_examples=model.corpus_count,
               epochs=model.epochs)
   print('Training done!')
