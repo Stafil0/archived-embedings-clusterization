@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "src\GUI\GUI.csproj", "{E7A250DF-3E8A-45AF-9C64-207AC89DBD79}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "NeuralNetwork", "src\NeuralNetwork\NeuralNetwork.pyproj", "{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdfConverter", "src\PdfConverter\PdfConverter.csproj", "{C652E99C-1853-4626-8E77-B2F60E3457D8}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Scripts", "src\Scripts\Scripts.pyproj", "{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,12 +31,6 @@ Global
 		{E7A250DF-3E8A-45AF-9C64-207AC89DBD79}.Release|x64.Build.0 = Release|Any CPU
 		{E7A250DF-3E8A-45AF-9C64-207AC89DBD79}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7A250DF-3E8A-45AF-9C64-207AC89DBD79}.Release|x86.Build.0 = Release|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|x64.ActiveCfg = Release|Any CPU
-		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|x86.ActiveCfg = Release|Any CPU
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -49,6 +43,12 @@ Global
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Release|x64.Build.0 = Release|Any CPU
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Release|x86.ActiveCfg = Release|Any CPU
 		{C652E99C-1853-4626-8E77-B2F60E3457D8}.Release|x86.Build.0 = Release|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|x64.ActiveCfg = Release|Any CPU
+		{2EC9823E-9DD0-4291-AB2A-A6F1FED868E4}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

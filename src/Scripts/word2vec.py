@@ -6,18 +6,17 @@ import sys
 
 # Path params
 MODEL_FILE = 'model.bin'
-SENTENCES_FILE = 'sentences.txt'
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-SAMPLES_DIR = os.path.abspath(os.path.join(os.path.join(__file__, '../../..'), 'samples'))
-SENTENCES_PATH = os.path.join(SAMPLES_DIR, SENTENCES_FILE)
-MODEL_PATH = os.path.join(CURRENT_DIR, MODEL_FILE)
+DATA_DIR = os.path.abspath(os.path.join(os.path.join(CURRENT_DIR, '../..'), 'data'))
+SENTENCES_DIR = os.path.join(DATA_DIR, 'sentences')
+MODEL_PATH = os.path.join(DATA_DIR, MODEL_FILE)
 
 # Model params
 MODEL_SIZE = 100
 MODEL_WINDOW = 5
-MODEL_MIN_COUNT = 4
-MODEL_WORKERS = 8
-MODEL_EPOCHS = 1000
+MODEL_MIN_COUNT = 3
+MODEL_WORKERS = 16
+MODEL_EPOCHS = 500
 MODEL_SKIPGRAM = 1
 
 # Training params
@@ -25,11 +24,11 @@ TRAINING_UPDATE = False
 
 def load_sentences():
   print('Loading sentences')
-  if (os.path.isfile(SENTENCES_PATH)):
-    sentences = gensim.models.word2vec.LineSentence(SENTENCES_PATH)
+  if (os.path.isdir(SENTENCES_DIR)):
+    sentences = gensim.models.word2vec.PathLineSentences(SENTENCES_DIR)
     return sentences
   else:
-    print('No sentence file!')
+    print('No sentence folder!')
     return None  
 
 def load_model():
@@ -37,7 +36,7 @@ def load_model():
   print('Loading model')
   if (os.path.isfile(MODEL_PATH)):
     TRAINING_UPDATE = True
-    model = gensim.models.Word2Vec.load(MODEL_FILE)
+    model = gensim.models.Word2Vec.load(MODEL_PATH)
     print('Model loaded')
   else:
     TRAINING_UPDATE = False
@@ -50,21 +49,27 @@ def load_model():
     print('New model created')
   return model
 
-def train_model(model, sentences):
+def train(model, sentences):
   print('Start training model')
 
-  model.build_vocab(sentences, update=TRAINING_UPDATE)
-  model.train(sentences, 
+  bigrams = gensim.models.Phrases(sentences)
+  phrases = bigrams[sentences]
+  model.build_vocab(phrases, update=TRAINING_UPDATE)
+  model.train(phrases, 
               total_examples=model.corpus_count,
               epochs=model.epochs)
   print('Training done!')
 
   print('Saving model')
-  model.save(MODEL_FILE)
+  model.save(MODEL_PATH)
   return model
 
-def test_model(model, word):
-  similar = model.wv.most_similar(positive=word)
+def similar_by_words(model, positive, negative = None):
+  similar = model.wv.most_similar(positive=positive, negative=negative)
+  print(similar)
+
+def similar_by_word(model, word):
+  similar = model.wv.similar_by_word(word)
   print(similar)
 
 if __name__ == '__main__':
@@ -77,5 +82,5 @@ if __name__ == '__main__':
     print('Bad load of model or sentences!')
     sys.exit(1)
 
-  model = train_model(model, sentences)
-  test_model(model, 'аспирин')
+  # model = train(model, sentences)
+  similar_by_words(model, 'какие препараты назначают для лечения бронхита'.split())

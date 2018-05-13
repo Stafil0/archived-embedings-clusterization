@@ -12,10 +12,10 @@ namespace MTA.PdfConverter
     public static void Main(string[] args)
     {
       var path = Directory.GetCurrentDirectory();
-      var samples = Path.GetFullPath(Path.Combine(path, @"..\..\..\..\samples"));
-      var result = Path.Combine(samples, "sentences.txt");
+      var samples = Path.GetFullPath(Path.Combine(path, @"..\..\..\..\data\samples"));
+      var sentences = Path.GetFullPath(Path.Combine(path, @"..\..\..\..\data\sentences"));
 
-      Converter.DirectoryToSentences(samples, result);
+      Converter.DirectoryToSentences(samples, sentences);
     }
   }
 }

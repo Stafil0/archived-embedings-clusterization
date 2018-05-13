@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using org.apache.pdfbox.pdmodel;
 using org.apache.pdfbox.util;
@@ -9,11 +11,12 @@ namespace MTA.PdfConverter
 {
   public static class Converter
   {
-    private static readonly string[] Inlines = { "лат", "греч", "др", "англ", "см", "нм", "тыс", "ат" };
-    private static readonly char[] TrimSymbols = { ',', '.', ' ', '?', '!', '-', '—', '＿' };
-    private static readonly string MatchesRegex = $@"((?:(?(?=(\b{string.Join(@"\.|\b", Inlines)}\.|[^а-яА-Яa-zA-Z][а-яА-Яa-zA-Z]\.\s?|\d+\.\d))\2|[^.!?])+[.!?]))";
-    private const string PunctuationRegex = @"[^а-яА-Яa-zA-Z]{2,}";
-    private const string ShortWordsRegex = @"\b[а-яА-Яa-zA-Z]{1,2}\b";
+    private const string SentencesPattern = @"((?:(?(?=(\d+?\.\d|\.?\s+?[А-ЯA-Z]\.|\p{P}{2}\s+?[а-яa-z\d]))\2|[^.!?])+[.!?]?))";
+    private const string PunctuationPattern = @"[^а-яА-Яa-zA-Z]{2,}";
+    private const string TrimPattern = @"^[^а-яА-Яa-zA-Z]+|[^а-яА-Яa-zA-Z]+$|\b[а-яА-Яa-zA-Z]{1,2}\b\s+?";
+
+    private const int MinWords = 7;
+    private const int MinLenght = 15;
 
     public static string GetTextFromFile(string path)
     {
@@ -32,59 +35,54 @@ namespace MTA.PdfConverter
       }
     }
 
-    public static IEnumerable<string> GetTextFromDirectory(string path)
-    {
-      var files = Directory.GetFiles(path, "*.pdf");
-      Console.WriteLine($"Working with directory {path}...");
-
-      for (int i = 0; i < files.Length; i++)
-      {
-        Console.WriteLine($"Done {i}/{files.Length} files...");
-        yield return Converter.GetTextFromFile(files[i]);
-      }
-    }
-
     public static IEnumerable<string> GetSentences(string text)
     {
       Console.WriteLine("Searching for sentences...");
       var separator = " ";
-      var match = Regex.Match(text, MatchesRegex, RegexOptions.IgnoreCase);
+      var match = Regex.Match(text, SentencesPattern, RegexOptions.IgnoreCase);
       while (match.Success)
       {
         var sentence = match.Value;
         if (sentence.IsSentence())
         {
           var formatted = sentence.Replace("-\r\n", string.Empty);
-          formatted = Regex.Replace(formatted, PunctuationRegex, separator, RegexOptions.IgnoreCase);
-          formatted = Regex.Replace(formatted, ShortWordsRegex, string.Empty, RegexOptions.IgnoreCase);
-          formatted = formatted.ToLower().Trim(TrimSymbols);
+          formatted = Regex.Replace(formatted, PunctuationPattern, separator, RegexOptions.IgnoreCase);
+          formatted = Regex.Replace(formatted, TrimPattern, string.Empty, RegexOptions.IgnoreCase);
 
           if (formatted.IsSentence())
-            yield return formatted;
+            yield return formatted.ToLower();
         }
 
         match = match.NextMatch();
       }
     }
 
-    public static void FileToSentences(string file, string savePath)
+    public static void FileToSentences(string from, string to)
     {
-      using (var writer = new StreamWriter(savePath, true))
+      var file = $"{Path.GetFileNameWithoutExtension(from)}.gz";
+      var path = Path.Combine(to, file);
+
+      using (var stream = new FileStream(path, FileMode.OpenOrCreate))
+      using (var zip = new GZipStream(stream, CompressionLevel.Fastest))
+      using (var writer = new StreamWriter(zip))
       {
-        var text = Converter.GetTextFromFile(file);
-        foreach (var sentence in Converter.GetSentences(text))
+        foreach (var sentence in Converter.GetSentences(Converter.GetTextFromFile(from)))
           writer.WriteLine(sentence);
       }
     }
 
-    public static void DirectoryToSentences(string directory, string savePath)
+    public static void DirectoryToSentences(string from, string to)
     {
-        foreach (var text in Converter.GetTextFromDirectory(directory))
-        foreach (var sentence in Converter.GetSentences(text))
-          Console.WriteLine(sentence);
+      var files = Directory.GetFiles(from, "*.pdf");
+
+      foreach (var file in files)
+        Converter.FileToSentences(file, to);
     }
 
     private static int WordsCount(this string text) => text.Split(null).Length;
-    private static bool IsSentence(this string text) => text.WordsCount() > 3 && text.Length > 15;
+
+    private static bool IsSentence(this string text) => 
+      text.WordsCount() > Converter.MinWords && 
+      text.Length > Converter.MinLenght;
   }
 }
