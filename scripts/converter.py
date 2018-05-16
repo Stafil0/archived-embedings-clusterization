@@ -4,13 +4,14 @@ import nltk
 import pandas
 import re
 import pickle
+import gzip
 from tika import parser
 from nltk.stem.snowball import SnowballStemmer
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(os.path.join(CURRENT_DIR, '..'), 'data'))
 SAMPLES_DIR = os.path.join(DATA_DIR, 'samples')
-VOCAB_DIR = os.path.join(DATA_DIR, 'vocab.data')
+VOCAB_PATH = os.path.join(DATA_DIR, 'vocab.data')
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -19,10 +20,10 @@ def pdf2text(path):
   text = content['content']
   return text
 
-def text2neural_data(text, language):
+def text2neural_data(head, text, language='russian'):
   tokens = tokenize(text, language)
   stemmed_tokens = stem(tokens, language)
-  vocab = pandas.DataFrame({'words': tokens}, index = stemmed_tokens)
+  vocab = pandas.Series(tokens, index=stemmed_tokens, name=head)
   return vocab
 
 def stem(tokens, language):
@@ -43,22 +44,32 @@ def tokenize(text, language):
   return tokens
 
 def pdfs2neural_data(pdfDir, dataPath, language='russian'):
-  if os.path.exists(dataPath):
-    with open(dataPath, 'rb') as file:
-      tokens = pickle.load(file)
-  else:
-    tokens = []
+  new = True
+  if os.path.exists(dataPath): vocab = load(dataPath)
+  else: vocab = []
 
+  existed = [doc.name for doc in vocab]
   if os.path.exists(pdfDir):
     for pdf in os.listdir(pdfDir):
-      extension = pdf.split('.')[-1]
-      if extension == 'pdf':
-        pdfPath = os.path.abspath(os.path.join(pdfDir, pdf))
-        text = pdf2text(pdfPath)
-        tokens.append(tokenize_and_stem(text, language))
+      if pdf not in existed:
+        extension = pdf.split('.')[-1]
+        if extension == 'pdf':
+          pdfPath = os.path.abspath(os.path.join(pdfDir, pdf))
+          text = pdf2text(pdfPath)
+          data = text2neural_data(pdf, text)
+          vocab.append(data)
+  save(vocab, dataPath)
 
-  with open(dataPath, 'wb') as file:
-    pickle.dump(tokens, file)
+def load(path):
+  file = gzip.open(path,'rb')
+  object = pickle.load(file)
+  file.close()
+  return object
+
+def save(object, path):
+  file = gzip.open(path,'wb')
+  pickle.dump(object, file)
+  file.close()
 
 if __name__ == '__main__':
-  pdfs2neural_data(SAMPLES_DIR, VOCAB_DIR)
+  pdfs2neural_data(SAMPLES_DIR, VOCAB_PATH)
