@@ -45,11 +45,9 @@ def save(object, path):
   pickle.dump(object, file)
   file.close()
 
-def load_docs(path):
-  if os.path.exists(path):
-    vocab = load(path)
-    documents = [TaggedDocument(doc.index.tolist(), doc.name) for doc in vocab]
-    return documents
+def load_docs(vocab):
+  documents = [TaggedDocument(list(doc.keys()), name) for name, doc in vocab.items()]
+  return documents
 
 def load_models(docs, path=None):
   update = False
@@ -98,10 +96,11 @@ def save_models(models, path):
     train_model.save(modelPath)
 
 if __name__ == '__main__':  
- docs = load_docs(VOCAB_PATH)
- models = load_models(docs, MODEL_DIR)
- models = train(models, docs)
- save_models(models, MODEL_DIR)
+  vocab = load(VOCAB_PATH)
+  docs = load_docs(vocab)
+  models = load_models(docs, MODEL_DIR)
+  models = train(models, docs)
+  save_models(models, MODEL_DIR)
 
- print(models['Doc2Vec(dbow+w,d100,n5,w10,mc2,s0.001,t8)'].most_similar('бронхит', topn=20))
- print(models['Doc2Vec(dm/m,d100,n5,w10,mc2,s0.001,t8)'].most_similar('бронхит', topn=20))
+  print(models['Doc2Vec(dbow+w,d100,n5,w10,mc2,s0.001,t8)'].most_similar('бронхит', topn=20))
+  print(models['Doc2Vec(dm/m,d100,n5,w10,mc2,s0.001,t8)'].most_similar('бронхит', topn=20))
