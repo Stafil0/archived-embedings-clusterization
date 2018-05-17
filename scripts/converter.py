@@ -20,10 +20,10 @@ def pdf2text(path):
   text = content['content']
   return text
 
-def text2neural_data(head, text, language='russian'):
+def text2neural_data(text, language='russian'):
   tokens = tokenize(text, language)
   stemmed_tokens = stem(tokens, language)
-  vocab = pandas.Series(tokens, index=stemmed_tokens, name=head)
+  vocab = dict(zip(stemmed_tokens, tokens))
   return vocab
 
 def stem(tokens, language):
@@ -46,18 +46,17 @@ def tokenize(text, language):
 def pdfs2neural_data(pdfDir, dataPath, language='russian'):
   new = True
   if os.path.exists(dataPath): vocab = load(dataPath)
-  else: vocab = []
+  else: vocab = {}
 
-  existed = [doc.name for doc in vocab]
   if os.path.exists(pdfDir):
     for pdf in os.listdir(pdfDir):
-      if pdf not in existed:
+      if pdf not in vocab:
         extension = pdf.split('.')[-1]
         if extension == 'pdf':
           pdfPath = os.path.abspath(os.path.join(pdfDir, pdf))
           text = pdf2text(pdfPath)
-          data = text2neural_data(pdf, text)
-          vocab.append(data)
+          data = text2neural_data(text)
+          vocab[pdf] = data
   save(vocab, dataPath)
 
 def load(path):
