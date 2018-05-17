@@ -7,7 +7,7 @@ import sys
 # Path params
 MODEL_FILE = 'model.bin'
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.abspath(os.path.join(os.path.join(CURRENT_DIR, '../..'), 'data'))
+DATA_DIR = os.path.abspath(os.path.join(os.path.join(CURRENT_DIR, '..'), 'data'))
 SENTENCES_DIR = os.path.join(DATA_DIR, 'sentences')
 MODEL_PATH = os.path.join(DATA_DIR, MODEL_FILE)
 
@@ -75,12 +75,12 @@ def similar_by_word(model, word):
 if __name__ == '__main__':
   logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
   
-  sentences = load_sentences()
+  # sentences = load_sentences()
   model = load_model()
 
-  if (model == None or sentences == None):
-    print('Bad load of model or sentences!')
-    sys.exit(1)
+  #if (model == None or sentences == None):
+   # print('Bad load of model or sentences!')
+   # sys.exit(1)
 
   # model = train(model, sentences)
   similar_by_words(model, 'какие препараты назначают для лечения бронхита'.split())

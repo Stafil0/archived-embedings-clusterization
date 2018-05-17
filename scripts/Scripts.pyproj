@@ -32,6 +32,9 @@
     <Compile Include="doc2vec.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="articles.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="word2vec.py" />
   </ItemGroup>
   <ItemGroup>
