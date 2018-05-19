@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<all>
+ <samples>
+  D:\For work\Projects\MTA\data\samples
+ </samples>
+ <data>
+  D:\For work\Projects\MTA\data
+ </data>
+</all>
+<config name="articles">
+ <proxy>
+  True
+ </proxy>
+ <start>
+  158
+ </start>
+ <pages>
+  12919
+ </pages>
+</config>

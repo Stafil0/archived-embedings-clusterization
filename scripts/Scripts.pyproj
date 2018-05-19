@@ -5,7 +5,7 @@
     <ProjectGuid>2ec9823e-9dd0-4291-ab2a-a6f1fed868e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>converter.py</StartupFile>
+    <StartupFile>articles.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
