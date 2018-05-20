@@ -59,25 +59,31 @@ def timeout(time, func, params=()):
   action.start()
   action.join(timeout=time)
   action.terminate()
-  print(colored('>> Done!','green'))
+  print(colored('>> Done!','red'))
   
 def get_proxies(count=20, timeout=10):
+  exceptions = 0
   print('Loading proxy list')
   while True:
-    try:
-      proxy_list.clear()
-      proxies = asyncio.Queue()
-      broker = Broker(proxies)
-      tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=count), save_proxy(proxies))
-      loop = asyncio.get_event_loop()
-      loop.run_until_complete(asyncio.wait_for(tasks, timeout))
-      break
-    except Exception as e:
-      print(colored('Timeout/error while getting proxy list:', 'red'), e)
-      broker.stop()
-      tasks.cancel()
-      continue
-  print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
+	if exceptions > 10:
+	  sleep = 30
+	  print(colored('Too many exceptions while getting proxy list. Sleep for:', 'red'), sleep)
+	  time.sleep(sleep)
+	  break
+	try:
+	  proxy_list.clear()
+	  proxies = asyncio.Queue()
+	  broker = Broker(proxies)
+	  tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=count), save_proxy(proxies))
+	  loop = asyncio.get_event_loop()
+	  loop.run_until_complete(asyncio.wait_for(tasks, timeout))
+	  print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
+	except Exception as e:
+	  print(colored('Error while getting proxy list:', 'red'), e)
+	  exceptions += 1
+	  broker.stop()
+	  tasks.cancel()
+	  continue
     
 async def save_proxy(proxies):
   while True:
