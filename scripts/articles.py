@@ -1,20 +1,13 @@
-import urllib.request
-import sys
-import os
-import re
-import string
-import requests
-import time
-import random
+import sys, os
+import re, string
+import requests, urllib.request
 import colorama
-import socket
-import socks
-import asyncio, time, concurrent
+import socket, socks
+import asyncio, aiohttp, time, concurrent, random
 from termcolor import colored
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from proxybroker import Broker
-from multiprocessing import Process
 
 CONFIG_FILE = '_config.xml'
 
@@ -52,39 +45,23 @@ def load_config(path):
   PAGES = int(articles.find('pages').text)
   START = int(articles.find('start').text)
   PROXY = bool(articles.find('proxy').text)
-
-def timeout(time, func, params=()):
-  print(colored('>> Start func', 'red'), func, colored('with timeout:','red'), time)
-  action = Process(target=func(*params))
-  action.start()
-  action.join(timeout=time)
-  action.terminate()
-  print(colored('>> Done!','red'))
   
-def get_proxies(count=20, timeout=10):
+def get_proxies(timeout=20, broker_timeout=5, max_conn=100, max_tries=1, limit=20):
   exceptions = 0
   print('Loading proxy list')
-  while True:
-	if exceptions > 10:
-	  sleep = 30
-	  print(colored('Too many exceptions while getting proxy list. Sleep for:', 'red'), sleep)
-	  time.sleep(sleep)
-	  break
-	try:
-	  proxy_list.clear()
-	  proxies = asyncio.Queue()
-	  broker = Broker(proxies)
-	  tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=count), save_proxy(proxies))
-	  loop = asyncio.get_event_loop()
-	  loop.run_until_complete(asyncio.wait_for(tasks, timeout))
-	  print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
-	except Exception as e:
-	  print(colored('Error while getting proxy list:', 'red'), e)
-	  exceptions += 1
-	  broker.stop()
-	  tasks.cancel()
-	  continue
-    
+  try:
+    proxy_list.clear()
+    proxies = asyncio.Queue()
+    broker = Broker(proxies, timeout=broker_timeout, max_conn=max_conn, max_tries=max_tries)
+    tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=limit), save_proxy(proxies), True)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.wait_for(tasks, timeout))
+    print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
+  except Exception as e:
+    print(colored('Error while loading proxies:','red'),e)
+    time.sleep(10)
+    pass
+
 async def save_proxy(proxies):
   while True:
     proxy = await proxies.get()
@@ -105,7 +82,7 @@ def change_proxy(remove=True, time=30):
       proxy_excepted.append(current)
       if current in proxy_list: proxy_list.remove(current) 
     if len(proxy_list) < 2:
-      timeout(60, get_proxies)
+      get_proxies()
       empty_count += 1
       continue
     if empty_count > 2:
@@ -179,7 +156,7 @@ def brutforce_articles():
 
   print(colored('Using proxy:', 'cyan'), PROXY)
   if PROXY:
-    timeout(60, get_proxies)
+    timeout(30, get_proxies)
     change_proxy()
 
   print(colored('Save path:', 'red'), SAMPLES_DIR)
