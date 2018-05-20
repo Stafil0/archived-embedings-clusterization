@@ -54,8 +54,12 @@ def load_config(path):
   
 def get_proxies():
   print('Loading proxy list')
+  exceptions = 0
   while True:
+    if exceptions > 10:
+      break
     try:
+      proxy_list.clear()
       proxies = asyncio.Queue()
       broker = Broker(proxies)
       tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=20), save_proxy(proxies))
@@ -64,6 +68,7 @@ def get_proxies():
       break
     except Exception as e:
       print(colored('Timeout/error while getting proxy list:', 'red'), e)
+      exceptions += 1
       broker.stop()
       tasks.cancel()
       continue
@@ -77,22 +82,27 @@ async def save_proxy(proxies):
     if proxy.avg_resp_time < 0.5 and ip not in proxy_excepted:
       proxy_list.append(ip)
 
-def change_proxy():
+def change_proxy(remove=True):
   global PROXY
   ok_proxy = False
   empty_count = 0
+  current_socks = socks.get_default_proxy()
 
   while not ok_proxy:
+    if remove and current_socks is not None:
+      current = (current_socks[1], current_socks[2])
+      proxy_excepted.append(current)
+      if current in proxy_list: proxy_list.remove(current) 
+    if len(proxy_list) < 2:
+      get_proxies()
+      empty_count += 1
+      continue
     if empty_count > 2:
       print(colored('No proxy avaliable. Switch to normal mode.', 'cyan'))
       socks.set_default_proxy()
       socket.socket = socks.socksocket
       PROXY = False
       break
-    if len(proxy_list) < 2:
-      get_proxies()
-      empty_count += 1
-      continue
     index = random.randint(0, len(proxy_list)-1)
     proxy = proxy_list[index]
     print(colored('Trying proxy:', 'magenta'), '%s:%d' % (proxy[0], proxy[1]))
@@ -105,7 +115,7 @@ def change_proxy():
     except: 
       proxy_excepted.append(proxy)
       proxy_list.remove(proxy) 
-      pass 
+      pass   
 
 def download(url, path, pause=0):
   global PROXY
