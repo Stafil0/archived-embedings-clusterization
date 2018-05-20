@@ -53,12 +53,14 @@ def get_proxies(timeout=20, broker_timeout=5, max_conn=100, max_tries=1, limit=2
     proxy_list.clear()
     proxies = asyncio.Queue()
     broker = Broker(proxies, timeout=broker_timeout, max_conn=max_conn, max_tries=max_tries)
-    tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=limit), save_proxy(proxies), True)
+    tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=limit), save_proxy(proxies))
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait_for(tasks, timeout))
     print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
   except Exception as e:
     print(colored('Error while loading proxies:','red'),e)
+    broker.stop()
+    tasks.cancel()
     time.sleep(10)
     pass
 
