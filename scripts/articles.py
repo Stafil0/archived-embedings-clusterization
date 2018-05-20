@@ -156,7 +156,7 @@ def brutforce_articles():
 
   print(colored('Using proxy:', 'cyan'), PROXY)
   if PROXY:
-    timeout(30, get_proxies)
+    get_proxies()
     change_proxy()
 
   print(colored('Save path:', 'red'), SAMPLES_DIR)
