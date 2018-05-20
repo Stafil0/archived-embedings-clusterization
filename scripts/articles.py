@@ -14,6 +14,7 @@ from termcolor import colored
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from proxybroker import Broker
+from multiprocessing import Process
 
 CONFIG_FILE = '_config.xml'
 
@@ -51,24 +52,28 @@ def load_config(path):
   PAGES = int(articles.find('pages').text)
   START = int(articles.find('start').text)
   PROXY = bool(articles.find('proxy').text)
+
+def timeout(time, func, params=()):
+  print(colored('>> Start func', 'red'), func, colored('with timeout:','red'), time)
+  action = Process(target=func(*params))
+  action.start()
+  action.join(timeout=time)
+  action.terminate()
+  print(colored('>> Done!','green'))
   
-def get_proxies():
+def get_proxies(count=20, timeout=10):
   print('Loading proxy list')
-  exceptions = 0
   while True:
-    if exceptions > 10:
-      break
     try:
       proxy_list.clear()
       proxies = asyncio.Queue()
       broker = Broker(proxies)
-      tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=20), save_proxy(proxies))
+      tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=count), save_proxy(proxies))
       loop = asyncio.get_event_loop()
-      loop.run_until_complete(asyncio.wait_for(tasks, 20))
+      loop.run_until_complete(asyncio.wait_for(tasks, timeout))
       break
     except Exception as e:
       print(colored('Timeout/error while getting proxy list:', 'red'), e)
-      exceptions += 1
       broker.stop()
       tasks.cancel()
       continue
@@ -82,7 +87,7 @@ async def save_proxy(proxies):
     if proxy.avg_resp_time < 0.5 and ip not in proxy_excepted:
       proxy_list.append(ip)
 
-def change_proxy(remove=True):
+def change_proxy(remove=True, time=30):
   global PROXY
   ok_proxy = False
   empty_count = 0
@@ -94,7 +99,7 @@ def change_proxy(remove=True):
       proxy_excepted.append(current)
       if current in proxy_list: proxy_list.remove(current) 
     if len(proxy_list) < 2:
-      get_proxies()
+      timeout(60, get_proxies)
       empty_count += 1
       continue
     if empty_count > 2:
@@ -168,7 +173,7 @@ def brutforce_articles():
 
   print(colored('Using proxy:', 'cyan'), PROXY)
   if PROXY:
-    get_proxies()
+    timeout(60, get_proxies)
     change_proxy()
 
   print(colored('Save path:', 'red'), SAMPLES_DIR)

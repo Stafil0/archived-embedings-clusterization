@@ -264,3 +264,4 @@ __pycache__/
 obj
 bin
 data
+_config.xml
