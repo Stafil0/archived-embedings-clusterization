@@ -14,27 +14,25 @@ CONFIG_FILE = '_config.xml'
 colorama.init()
 ua = UserAgent()
 regex = re.compile('[^а-яА-Яa-zA-Z]+')
+default_socket = socket.socket
 proxy_list = []
 proxy_excepted = []
+current_proxy = ()
 
-def save_config(exctype, value, traceback):
-  if exctype == KeyboardInterrupt:
-    with open(CONFIG_FILE, 'rb') as file:
-      print(value)
-      soup = BeautifulSoup(file, 'html.parser')
-      articles = soup.find('config', {'name':'articles'})
-      articles.find('start').string.replace_with(str(START))
-    with open(CONFIG_FILE, 'wb') as file:
-      file.write(soup.prettify('utf-8', 'minimal'))
-  else:
-    sys.__excepthook__(exctype, value, traceback)
-sys.excepthook = save_config
+def save_start2config(start_pos):
+  with open(CONFIG_FILE, 'rb') as file:
+    soup = BeautifulSoup(file, 'html.parser')
+    articles = soup.find('config', {'name':'articles'})
+    articles.find('start').string.replace_with(str(start_pos))
+  with open(CONFIG_FILE, 'wb') as file:
+    file.write(soup.prettify('utf-8', 'minimal'))
 
 def load_config(path):
   global SAMPLES_DIR
   global PAGES
   global START
   global PROXY
+  global COUNT
 
   with open(path, 'rb') as file:
     content = file.read()
@@ -44,13 +42,15 @@ def load_config(path):
   SAMPLES_DIR = all.find('samples').text.strip()
   PAGES = int(articles.find('pages').text)
   START = int(articles.find('start').text)
-  PROXY = bool(articles.find('proxy').text)
+  COUNT = int(articles.find('count').text)
+  PROXY = articles.find('proxy').text.strip() == 'True'
   
-def get_proxies(timeout=20, broker_timeout=5, max_conn=100, max_tries=1, limit=20):
+def get_proxies(timeout=20, broker_timeout=7, max_conn=150, max_tries=3, limit=40):
   exceptions = 0
   print('Loading proxy list')
   try:
     proxy_list.clear()
+    setup_proxy(reset=True)
     proxies = asyncio.Queue()
     broker = Broker(proxies, timeout=broker_timeout, max_conn=max_conn, max_tries=max_tries)
     tasks = asyncio.gather(broker.find(types=['SOCKS5'], limit=limit), save_proxy(proxies))
@@ -58,11 +58,19 @@ def get_proxies(timeout=20, broker_timeout=5, max_conn=100, max_tries=1, limit=2
     loop.run_until_complete(asyncio.wait_for(tasks, timeout))
     print('Loaded proxies:', colored(len(proxy_list), 'cyan'))
   except Exception as e:
-    print(colored('Error while loading proxies:','red'),e)
+    print(colored('Error while loading proxies.','red'),e)
+    time.sleep(5)
+    pass
+  finally:
     broker.stop()
     tasks.cancel()
-    time.sleep(10)
-    pass
+
+def setup_proxy(type=None, host=None, port=None, reset=False):
+  if reset: 
+    socket.socket = default_socket
+  else: 
+    socks.set_default_proxy(type, host, port)
+    socket.socket = socks.socksocket
 
 async def save_proxy(proxies):
   while True:
@@ -72,40 +80,39 @@ async def save_proxy(proxies):
     if proxy.avg_resp_time < 0.5 and ip not in proxy_excepted:
       proxy_list.append(ip)
 
-def change_proxy(remove=True, time=30):
+def change_proxy(remove=True):
   global PROXY
-  ok_proxy = False
+  global current_proxy
   empty_count = 0
-  current_socks = socks.get_default_proxy()
 
-  while not ok_proxy:
-    if remove and current_socks is not None:
-      current = (current_socks[1], current_socks[2])
-      proxy_excepted.append(current)
-      if current in proxy_list: proxy_list.remove(current) 
-    if len(proxy_list) < 2:
+  while True:
+    if remove and len(current_proxy) > 1:
+      proxy_excepted.append(current_proxy)
+      if current_proxy in proxy_list: proxy_list.remove(current_proxy)
+
+    if empty_count > 3:	
+      print(colored('No proxy avaliable. Switch to normal mode.', 'cyan'))
+      PROXY = False
+      setup_proxy(reset=True)
+      break   
+	  
+    if len(proxy_list) < 3:	
       get_proxies()
       empty_count += 1
-      continue
-    if empty_count > 2:
-      print(colored('No proxy avaliable. Switch to normal mode.', 'cyan'))
-      socks.set_default_proxy()
-      socket.socket = socks.socksocket
-      PROXY = False
-      break
+      continue	
+
     index = random.randint(0, len(proxy_list)-1)
-    proxy = proxy_list[index]
-    print(colored('Trying proxy:', 'magenta'), '%s:%d' % (proxy[0], proxy[1]))
+    current_proxy = proxy_list[index]
+    print(colored('Trying proxy:', 'magenta'),'%s:%d'%(current_proxy[0], current_proxy[1]))
     try: 
-      socks.set_default_proxy(socks.SOCKS5, proxy[0], proxy[1])
-      socket.socket = socks.socksocket     
-      iprequest = requests.get('http://checkip.amazonaws.com/', timeout=0.5)
-      ok_proxy = True
+      setup_proxy(socks.SOCKS5, current_proxy[0], current_proxy[1])
+      iprequest = requests.get('http://checkip.amazonaws.com/', timeout=0.5)      
       print(colored('New IP:', 'green'), iprequest.text.strip())
+      break
     except: 
-      proxy_excepted.append(proxy)
-      proxy_list.remove(proxy) 
-      pass   
+      proxy_excepted.append(current_proxy)
+      proxy_list.remove(current_proxy) 
+      continue  
 
 def download(url, path, pause=0):
   global PROXY
@@ -148,25 +155,25 @@ def download_articles(htmlpage):
       fname = regex.sub(' ',name)[:150]+'.pdf'
       pdf = os.path.abspath(os.path.join(SAMPLES_DIR, fname))
       url = 'https://cyberleninka.ru'+path+'.pdf'
-      download(url, pdf, 10)
+      download(url, pdf, 5)
       print('Save:', colored(fname, 'grey'))
       count += 1
   return count
 
 def brutforce_articles():
-  global START
-
   print(colored('Using proxy:', 'cyan'), PROXY)
   if PROXY:
     get_proxies()
-    change_proxy()
+    change_proxy(False)
 
   print(colored('Save path:', 'red'), SAMPLES_DIR)
-  for i in range(START, PAGES):
-    START = i
-    link = 'https://cyberleninka.ru/article/c/meditsina-i-zdravoohranenie/'+str(i)
-    print(colored('Downloaded:', 'yellow'), len(os.listdir(SAMPLES_DIR)))
+  for i in range(START, PAGES):   
+    save_start2config(i)
+    downloaded = len(os.listdir(SAMPLES_DIR))
+    print(colored('Downloaded:', 'yellow'), downloaded)
     print(colored('Reading %d page of %d' % (i, PAGES), 'blue'), '(%f%%)' % (i/PAGES))
+    if downloaded > COUNT: break
+    link = 'https://cyberleninka.ru/article/c/meditsina-i-zdravoohranenie/'+str(i)
     while True:
       try: responce = requests.get(link, headers={'User-Agent': UserAgent().chrome})
       except:

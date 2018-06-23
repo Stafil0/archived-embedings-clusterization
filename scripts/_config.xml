@@ -1,20 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <all>
- <samples>
-  D:\For work\Projects\MTA\data\samples
- </samples>
  <data>
   D:\For work\Projects\MTA\data
  </data>
+ <samples>
+  D:\For work\Projects\MTA\data\samples
+ </samples>
+ <models>
+  D:\For work\Projects\MTA\data\models
+ </models>
+ <plots>
+  D:\For work\Projects\MTA\data\plots
+ </plots>
+ <vocabs>
+  D:\For work\Projects\MTA\data\vocabs
+ </vocabs>
 </all>
 <config name="articles">
  <proxy>
   True
  </proxy>
  <start>
-  357
+  547
  </start>
  <pages>
   12919
  </pages>
+ <count>
+  10000
+ </count>
+</config>
+<config name="doc2vec">
+ <epoch>
+  77
+ </epoch>
+ <passes>
+  123
+ </passes>
+ <alpha>
+  0.015640000000000112
+ </alpha>
+ <vocab>
+  vocab100.data
+ </vocab>
 </config>
